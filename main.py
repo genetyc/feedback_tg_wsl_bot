@@ -1,10 +1,11 @@
 import logging
 import asyncio
+import json
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from bot_create import bot, dp, BASE_URL, WEBHOOK_PATH, HOST, PORT, ADMIN_ID
-from handlers.start import router
+from handlers.start import start_router
 
 # Функция для проверки вебхука TODO - удалить после отладки
 # async def print_webhook_info():
@@ -42,9 +43,9 @@ async def on_shutdown() -> None:
 
 
 # Основная функция, которая запускает приложение
-def main() -> None:
+async def main() -> None:
     # Подключаем маршрутизатор (роутер) для обработки сообщений
-    dp.include_router(router)
+    dp.include_router(start_router)
 
     # Регистрируем функцию, которая будет вызвана при старте бота
     dp.startup.register(on_startup)
@@ -54,7 +55,7 @@ def main() -> None:
     logging.basicConfig(level=logging.DEBUG)
 
     # Создаем веб-приложение на базе aiohttp
-    app = web.Application()
+    # app = web.Application()
 
     # Настраиваем обработчик запросов для работы с вебхуком
     # webhook_requests_handler = SimpleRequestHandler(
@@ -65,12 +66,13 @@ def main() -> None:
     # webhook_requests_handler.register(app, path=WEBHOOK_PATH)
 
     # Настраиваем приложение и связываем его с диспетчером и ботом
-    setup_application(app, dp, bot=bot)
+    # setup_application(app, dp, bot=bot)
 
     # Запускаем веб-сервер на указанном хосте и порте
     #web.run_app(app, host=HOST, port=PORT)
 
-    asyncio.run(dp.start_polling(bot))
+    #asyncio.run(dp.start_polling(bot))
+    await dp.start_polling(bot)
 
 
 # Точка входа в программу
@@ -78,4 +80,4 @@ if __name__ == "__main__":
     # Настраиваем логирование (информация, предупреждения, ошибки) и выводим их в консоль
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)  # Создаем логгер для использования в других частях программы
-    main()  # Запускаем основную функцию
+    asyncio.run(main())  # Запускаем основную функцию
