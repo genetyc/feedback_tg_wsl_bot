@@ -6,6 +6,7 @@ from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from bot_create import bot, dp, BASE_URL, WEBHOOK_PATH, HOST, PORT, ADMIN_ID
 from handlers.start import start_router
+from handlers import survey
 
 # Функция для проверки вебхука TODO - удалить после отладки
 # async def print_webhook_info():
@@ -46,6 +47,7 @@ async def on_shutdown() -> None:
 async def main() -> None:
     # Подключаем маршрутизатор (роутер) для обработки сообщений
     dp.include_router(start_router)
+    dp.include_router(survey.survey_router)
 
     # Регистрируем функцию, которая будет вызвана при старте бота
     dp.startup.register(on_startup)
