@@ -11,8 +11,8 @@ def spec_kb_generation(kb_list: str, next_button: bool = False) -> ReplyKeyboard
     builder = ReplyKeyboardBuilder()
     for item in kb_list.split('='):
         builder.button(text=item)
-    builder.adjust(1)
     if next_button: builder.add(KeyboardButton(text='Дальше'))
+    builder.adjust(1)
     return builder.as_markup(resize_keyboard=True)
 
 

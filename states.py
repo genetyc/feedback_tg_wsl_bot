@@ -20,3 +20,4 @@ class Survey(StatesGroup):
     question15 = State()
     question16 = State()
     interstate = State()
+    other_state = State()
