@@ -7,12 +7,12 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from bot_create import bot, dp, BASE_URL, WEBHOOK_PATH, HOST, PORT, ADMIN_ID
 from handlers.start import start_router
 from handlers import survey
-
+#from dp_handler.dp_class import connect_to_db
 # Функция для проверки вебхука TODO - удалить после отладки
 # async def print_webhook_info():
 #     webhook_info = await bot.get_webhook_info()
 #     print(webhook_info)
-
+#pool = None
 # Функция для установки командного меню для бота
 async def set_commands():
     # Создаем список команд, которые будут доступны пользователям
@@ -23,6 +23,8 @@ async def set_commands():
 
 # Функция, которая будет вызвана при запуске бота TODO удалить все связанное с вебхуками - на время отладки буду использовать поллинг
 async def on_startup() -> None:
+    global file
+    #global pool
     # Устанавливаем командное меню
     await set_commands()
     # Устанавливаем вебхук для приема сообщений через заданный URL
@@ -30,16 +32,23 @@ async def on_startup() -> None:
     # Отправляем сообщение администратору о том, что бот был запущен
     await bot.send_message(chat_id=ADMIN_ID, text='Бот запущен!')
     print("Bot is running...")
+
+    #pool = await connect_to_db()
+    #print("Database access granted")
     # await print_webhook_info()
 
 
 # Функция, которая будет вызвана при остановке бота
 async def on_shutdown() -> None:
+    #global pool
     # Отправляем сообщение администратору о том, что бот был остановлен
     await bot.send_message(chat_id=ADMIN_ID, text='Бот остановлен!')
     # Удаляем вебхук и, при необходимости, очищаем ожидающие обновления
     # await bot.delete_webhook(drop_pending_updates=True)
     # Закрываем сессию бота, освобождая ресурсы
+
+    #await pool.close()
+    #print('Database access closed')
     await bot.session.close()
 
 
@@ -81,5 +90,5 @@ async def main() -> None:
 if __name__ == "__main__":
     # Настраиваем логирование (информация, предупреждения, ошибки) и выводим их в консоль
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logger = logging.getLogger(__name__)  # Создаем логгер для использования в других частях программы
+    #logger = logging.getLogger(__name__)  # Создаем логгер для использования в других частях программы
     asyncio.run(main())  # Запускаем основную функцию

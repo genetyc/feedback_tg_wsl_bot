@@ -10,7 +10,7 @@ from kb_generator import kb_generation
 start_router = Router()
 
 
-@start_router.message(CommandStart())
+@start_router.message(CommandStart())   # TODO сделать что-то с сохранением прогресса
 async def command_start(message: Message, state: FSMContext) -> None:
     await message.answer(f"{msgs['start']}")
     await state.set_state(Survey.question1)

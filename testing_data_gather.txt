@@ -1,0 +1,17 @@
+did_receive_parents_report->Да
+where_you_found_out->На мероприятии
+what_is_quality_edu->Формирование позитивных личностных качеств
+whats_your_goal->Общее развитие;asd;Поездка за границу
+education_quality->Полностью согласен;В основном согласен;Не согласен
+your_thoughts->EMPTY
+how_effective->asd
+how_effective->Полностью согласен;В основном согласен;Не согласен;Полностью согласен
+professionalism->В основном согласен
+other_events->Ребёнок не участвовал
+teacher_parents->asd
+whats_good->EMPTY
+whats_bad->EMPTY
+your_wishes->EMPTY
+gender->Мужской
+age->46-55
+education->Неполное высшее
