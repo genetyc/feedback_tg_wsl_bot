@@ -43,6 +43,11 @@ async def on_shutdown() -> None:
     #global pool
     # Отправляем сообщение администратору о том, что бот был остановлен
     await bot.send_message(chat_id=ADMIN_ID, text='Бот остановлен!')
+    latest_answers = []
+    with open('testing_data_gather.txt') as file:   # TODO возможно стоит потом убрать или переделать
+        for line in file.readlines():
+            latest_answers.append(line)
+    await bot.send_message(chat_id=ADMIN_ID, text = f'Ваши ответы:\n{('').join(latest_answers)}')
     # Удаляем вебхук и, при необходимости, очищаем ожидающие обновления
     # await bot.delete_webhook(drop_pending_updates=True)
     # Закрываем сессию бота, освобождая ресурсы

@@ -44,30 +44,47 @@ async def state2(message: Message, state: FSMContext):
             file.write(f'{current_question}->{text}\n')
         else:
             file.write(f'{current_question}->UNKNOWN\n')
-        await message.answer(f"{msgs['what_is_quality_edu']}", reply_markup=spec_kb_generation(answrs['what_is_quality_edu'], False))
+        await message.answer(f"{msgs['what_is_quality_edu']}", reply_markup=spec_kb_generation(answrs['what_is_quality_edu'], next_button=False))
         await state.set_state(Survey.question3)
-        current_question = 'what_is_quality_edu'
 
 
 @survey_router.message(Survey.question3)
 async def state3(message: Message, state: FSMContext):
     global file, current_question
+    current_question = 'what_is_quality_edu'
     text = message.text
     if text == "Другое":
         await message.answer("Предложите свой вариант:")
         await state.set_state(Survey.other_state)
-        await state.update_data(active_state=Survey.question4, questions='whats_your_goal', answers='whats_your_goal', next_button=True)
+        await state.update_data(active_state=Survey.question3_5, questions='whats_your_goal', answers='whats_your_goal', next_button=False)
     else:
         if text in answrs[current_question]:
             file.write(f'{current_question}->{text}\n')
         else:
             file.write(f'{current_question}->UNKNOWN\n')
-        await message.answer(f"{msgs['whats_your_goal']}", reply_markup=spec_kb_generation(answrs['whats_your_goal'], True))
-        await state.set_state(Survey.question4)
-        current_question = 'whats_your_goal'
+        await message.answer(f"{msgs['whats_your_goal']}", reply_markup=spec_kb_generation(answrs['whats_your_goal'], next_button=False))
+        await state.set_state(Survey.question3_5)
     
 
-@survey_router.message(Survey.question4)    # TODO можно написать еще одно сообщение 'что-то еще?', а в первом убрать кнопку дальше
+@survey_router.message(Survey.question3_5)
+async def state3_5(message: Message, state: FSMContext):
+    global file, current_question, temp
+    current_question = 'whats_your_goal'
+    text = message.text
+    if text == "Другое":
+        await message.answer("Предложите свой вариант:")
+        await state.set_state(Survey.other_state)
+        await state.update_data(active_state=Survey.question4, questions='nother', answers='whats_your_goal', next_button=False, tmp=True)
+    else:
+        if text in answrs[current_question]:
+            temp.add(text)
+        else:
+            pass
+        await message.answer(msgs['nother'], reply_markup=spec_kb_generation(answrs['whats_your_goal'], next_button=True))
+        await state.set_state(Survey.question4)
+    
+
+@survey_router.message(Survey.question4)
 async def state4(message: Message, state: FSMContext):
     global file, current_question, temp
     text = message.text
@@ -76,14 +93,12 @@ async def state4(message: Message, state: FSMContext):
     if message.text == "Другое":
         await message.answer("Предложите свой вариант:")
         await state.set_state(Survey.other_state)
-        await state.update_data(active_state=Survey.question4, questions='whats_your_goal', answers='whats_your_goal', next_button=True, tmp=True)
+        await state.update_data(active_state=Survey.question4, questions='nother', answers='whats_your_goal', next_button=True, tmp=True)
     if message.text == 'Дальше':
-        questions = str(msgs['education_quality']).split('-')
+        questions = str(msgs['education_quality']).split('=')
         await message.answer(questions[0], reply_markup=spec_kb_generation(answrs['education_quality']))
         await state.set_state(Survey.interstate)
         await state.update_data(counter=len(questions)-1, phase=1, questions=questions, next_q='your_thoughts', next_state=Survey.question5)
-        try: temp.remove('Другое')
-        except: pass
         file.write(f'{current_question}->{';'.join(temp)}\n')
         temp = set()
         current_question = 'education_quality'
@@ -106,59 +121,88 @@ async def state5(message: Message, state: FSMContext):
 async def state6(message: Message, state: FSMContext):
     global file, current_question
     file.write(f'{current_question}->{message.text}\n')
-    questions = str(msgs['teacher_student']).split('-')
+    questions = str(msgs['teacher_student']).split('=')
     await message.answer(questions[0], reply_markup=spec_kb_generation(answrs['education_quality']))
     await state.set_state(Survey.interstate)
-    await state.update_data(counter=len(questions)-1, phase=1, questions=questions, next_q='professionalism', next_state=Survey.question8, mk='education_quality')
+    await state.update_data(counter=len(questions)-1, phase=1, questions=questions, next_q='professionalism', next_state=Survey.question7, mk='education_quality')
 
 
-@survey_router.message(Survey.question8)
-async def state8(message: Message, state: FSMContext):
+@survey_router.message(Survey.question7)
+async def state7(message: Message, state: FSMContext):
     global file, current_question
     text = message.text
     if text in answrs['education_quality']:
         file.write(f'{current_question}->{text}\n')
     else:
         file.write(f'{current_question}->UNKNOWN\n')
-    await message.answer(msgs['other_events'], reply_markup=spec_kb_generation(answrs['other_events'], next_button=True))
-    await state.set_state(Survey.question9)
+    await message.answer(msgs['other_events'], reply_markup=spec_kb_generation(answrs['other_events'], next_button=False))
+    await state.set_state(Survey.question7_5)
     current_question = 'other_events'
 
 
-@survey_router.message(Survey.question9)
-async def state9(message: Message, state: FSMContext):
+@survey_router.message(Survey.question7_5)
+async def state7_5(message: Message, state: FSMContext):
     global file, current_question, temp
     text = message.text
-    if text in answrs['other_events']:
+    if text in answrs['other_events2'] and text != 'Онлайн-интенсивы':
         temp.add(text)
-    if text == 'Онлайн-интенсивы':
-        await message.answer("Напишите, на какие онлайн-интенсивы вам понравились больше всего:")
+        await message.answer(msgs['nother'], reply_markup=spec_kb_generation(answrs['other_events2'], next_button=True))
+        await state.set_state(Survey.question8)
+    elif text == 'Онлайн-интенсивы':
+        await message.answer("Напишите, какие онлайн-интенсивы Вам понравились больше всего:")
         await state.set_state(Survey.other_state)
-        await state.update_data(active_state=Survey.question9, questions='other_events', answers='other_events2', next_button=True)
-    elif message.text == 'Дальше' or message.text == 'Ребёнок не участвовал':
-        try: temp.remove('Онлайн-интенсивы')
-        except: pass
-        try: 
-            if len(temp) > 1:
-                temp.remove('Ребёнок не участвовал')
-        except: pass
-        file.write(f'{current_question}->{';'.join(temp)}\n')
-        temp = set()
+        await state.update_data(active_state=Survey.question8, questions='nother', answers='other_events2', next_button=True, tmp=True)
+    elif text == 'Ребёнок не участвовал':
+        file.write(f'{current_question}->Ребёнок не участвовал\n')
         await message.answer(msgs['teacher_parents'], reply_markup=ReplyKeyboardRemove())
         await state.set_state(Survey.question10)
         current_question = 'teacher_parents'
 
 
-@survey_router.message(Survey.question10)
-async def state10(message: Message, state: FSMContext):
+@survey_router.message(Survey.question8)
+async def state8(message: Message, state: FSMContext):
+    global file, current_question, temp
+    current_question = 'other_events'
+    text = message.text
+    if text in answrs['other_events'] and text != 'Онлайн-интенсивы':
+        temp.add(text)
+    elif text == 'Онлайн-интенсивы':
+        await message.answer("Напишите, на какие онлайн-интенсивы вам понравились больше всего:")
+        await state.set_state(Survey.other_state)
+        await state.update_data(active_state=Survey.question8, questions='nother', answers='other_events2', next_button=True, tmp=True)
+    elif message.text == 'Дальше':
+        file.write(f'{current_question}->{';'.join(temp)}\n')
+        temp = set()
+        await message.answer(msgs['teacher_parents'], reply_markup=ReplyKeyboardRemove())
+        await state.set_state(Survey.question9)
+        current_question = 'teacher_parents'
+
+
+@survey_router.message(Survey.question9)
+async def state9(message: Message, state: FSMContext):
     global file, current_question
     text = message.text
     file.write(f'{current_question}->{text}\n')
     await message.answer(msgs['whats_good'], reply_markup=kb_generation(kb_list = [
         [KeyboardButton(text='Пропустить')]
     ]))
-    await state.set_state(Survey.question11)
+    await state.set_state(Survey.question10)
     current_question = 'whats_good'
+
+
+@survey_router.message(Survey.question10)
+async def state10(message: Message, state: FSMContext):
+    global file, current_question
+    text = message.text
+    if text == 'Пропустить':
+        file.write(f'{current_question}->EMPTY\n')
+    else:
+        file.write(f'{current_question}->{text}\n')
+    await message.answer(msgs['whats_bad'], reply_markup=kb_generation(kb_list = [
+        [KeyboardButton(text='Пропустить')]
+    ]))
+    await state.set_state(Survey.question11)
+    current_question = 'whats_bad'
 
 
 @survey_router.message(Survey.question11)
@@ -169,11 +213,11 @@ async def state11(message: Message, state: FSMContext):
         file.write(f'{current_question}->EMPTY\n')
     else:
         file.write(f'{current_question}->{text}\n')
-    await message.answer(msgs['whats_bad'], reply_markup=kb_generation(kb_list = [
+    await message.answer(msgs['your_wishes'], reply_markup=kb_generation(kb_list = [
         [KeyboardButton(text='Пропустить')]
     ]))
     await state.set_state(Survey.question12)
-    current_question = 'whats_bad'
+    current_question = 'your_wishes'
 
 
 @survey_router.message(Survey.question12)
@@ -184,56 +228,41 @@ async def state12(message: Message, state: FSMContext):
         file.write(f'{current_question}->EMPTY\n')
     else:
         file.write(f'{current_question}->{text}\n')
-    await message.answer(msgs['your_wishes'], reply_markup=kb_generation(kb_list = [
-        [KeyboardButton(text='Пропустить')]
-    ]))
+    await message.answer(msgs['gender'], reply_markup=spec_kb_generation(answrs['gender']))
     await state.set_state(Survey.question13)
-    current_question = 'your_wishes'
+    current_question = 'gender'
 
 
 @survey_router.message(Survey.question13)
 async def state13(message: Message, state: FSMContext):
-    global file, current_question
-    text = message.text
-    if text == 'Пропустить':
-        file.write(f'{current_question}->EMPTY\n')
-    else:
-        file.write(f'{current_question}->{text}\n')
-    await message.answer(msgs['gender'], reply_markup=spec_kb_generation(answrs['gender']))
-    await state.set_state(Survey.question14)
-    current_question = 'gender'
-
-
-@survey_router.message(Survey.question14)
-async def state14(message: Message, state: FSMContext):
     global file
     await message.answer(msgs['age'], reply_markup=spec_kb_generation(answrs['age']))
-    await state.set_state(Survey.question15)
+    await state.set_state(Survey.question14)
     text = message.text
-    if text in str(answrs['gender']):
+    if text in answrs['gender']:
         file.write(f'gender->{text}\n')
     else:
         file.write(f'gender->UNKNOWN\n')
 
 
-@survey_router.message(Survey.question15)
-async def state15(message: Message, state: FSMContext):
+@survey_router.message(Survey.question14)
+async def state14(message: Message, state: FSMContext):
     global file
     await message.answer(msgs['education'], reply_markup=spec_kb_generation(answrs['education']))
-    await state.set_state(Survey.question16)
+    await state.set_state(Survey.question15)
     text = message.text
-    if text in str(answrs['age']):
+    if text in answrs['age']:
         file.write(f'age->{text}\n')
     else:
         file.write(f'age->UNKNOWN\n')
 
 
-@survey_router.message(Survey.question16)
-async def state16(message: Message):
+@survey_router.message(Survey.question15)
+async def state15(message: Message):
     global file
     await message.answer(msgs['ending'], reply_markup=ReplyKeyboardRemove())
     text = message.text
-    if text in str(answrs['education']):
+    if text in answrs['education']:
         file.write(f'education->{text}\n')
     else:
         file.write(f'education->UNKNOWN\n')
@@ -286,7 +315,7 @@ async def other_state(message: Message, state: FSMContext):
     if not tmp:
         file.write(f'{current_question}->{text}\n')
     else:
-        temp.add(text)
-    current_question = questions
+        if text != 'Другое':
+            temp.add(text)
     await message.answer(f"{msgs[questions]}",reply_markup=spec_kb_generation(answrs[answers], next_button=next_button))
     await state.set_state(active_state)
