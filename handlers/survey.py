@@ -3,8 +3,8 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, KeyboardButton, ReplyKeyboardRemove
 from states import Survey
-from json_handler import msgs, answrs
-from kb_generator import kb_generation, spec_kb_generation
+from handlers.json_handler import msgs, answrs
+from keyboards.kb_generator import kb_generation, spec_kb_generation
 #from main import pool
 
 #'✅'
@@ -76,7 +76,7 @@ async def state3_5(message: Message, state: FSMContext):
         await state.set_state(Survey.other_state)
         await state.update_data(active_state=Survey.question4, questions='nother', answers='whats_your_goal', next_button=False, tmp=True)
     else:
-        if text in answrs[current_question]:
+        if text in answrs[current_question] and text != 'Другое':
             temp.add(text)
         else:
             pass
@@ -88,7 +88,7 @@ async def state3_5(message: Message, state: FSMContext):
 async def state4(message: Message, state: FSMContext):
     global file, current_question, temp
     text = message.text
-    if text in answrs[current_question]:
+    if text in answrs[current_question] and text != 'Другое':
         temp.add(text)
     if message.text == "Другое":
         await message.answer("Предложите свой вариант:")
@@ -121,6 +121,7 @@ async def state5(message: Message, state: FSMContext):
 async def state6(message: Message, state: FSMContext):
     global file, current_question
     file.write(f'{current_question}->{message.text}\n')
+    current_question = 'teacher_student'
     questions = str(msgs['teacher_student']).split('=')
     await message.answer(questions[0], reply_markup=spec_kb_generation(answrs['education_quality']))
     await state.set_state(Survey.interstate)

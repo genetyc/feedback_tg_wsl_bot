@@ -5,12 +5,11 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from bot_create import bot, dp, BASE_URL, WEBHOOK_PATH, HOST, PORT, ADMIN_ID
-from handlers.start import start_router
-from handlers import survey
+from handlers import survey, mini_survey, start
 #from dp_handler.dp_class import connect_to_db
 # Функция для проверки вебхука TODO - удалить после отладки
 # async def print_webhook_info():
-#     webhook_info = await bot.get_webhook_info()
+# #     webhook_info = await bot.get_webhook_info()
 #     print(webhook_info)
 #pool = None
 # Функция для установки командного меню для бота
@@ -44,10 +43,11 @@ async def on_shutdown() -> None:
     # Отправляем сообщение администратору о том, что бот был остановлен
     await bot.send_message(chat_id=ADMIN_ID, text='Бот остановлен!')
     latest_answers = []
-    with open('testing_data_gather.txt') as file:   # TODO возможно стоит потом убрать или переделать
-        for line in file.readlines():
-            latest_answers.append(line)
-    await bot.send_message(chat_id=ADMIN_ID, text = f'Ваши ответы:\n{('').join(latest_answers)}')
+    # with open('testing_data_gather.txt') as file:   # TODO возможно стоит потом убрать или переделать
+    #     for line in file.readlines():
+    #         latest_answers.append(line)
+    # await bot.send_message(chat_id=ADMIN_ID, text = f'Ваши ответы:\n{('').join(latest_answers)}')
+    
     # Удаляем вебхук и, при необходимости, очищаем ожидающие обновления
     # await bot.delete_webhook(drop_pending_updates=True)
     # Закрываем сессию бота, освобождая ресурсы
@@ -60,8 +60,9 @@ async def on_shutdown() -> None:
 # Основная функция, которая запускает приложение
 async def main() -> None:
     # Подключаем маршрутизатор (роутер) для обработки сообщений
-    dp.include_router(start_router)
+    dp.include_router(start.start_router)
     dp.include_router(survey.survey_router)
+    dp.include_router(mini_survey.mini_survey_router)
 
     # Регистрируем функцию, которая будет вызвана при старте бота
     dp.startup.register(on_startup)
