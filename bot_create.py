@@ -4,22 +4,29 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from decouple import config
-#from dp_handler.dp_class import PostgresHandler
+from dp_handler.dp_class import Database
 
 
 # переменные для работы
 ADMIN_ID = config('ADMIN_ID')
 API = config("API")
-HOST = config("HOST")
+HOST = config("LHOST")
 PORT = int(config("PORT"))
 WEBHOOK_PATH = f'/{API}'
 BASE_URL = config("URL")
+USER = config('USER')
+PASSWORD = config('PASSWORD')
+DATABASE_LOCAL = config('DB_LOCAL')
 
 
-#pg_db = PostgresHandler(config('PG_LINK'))
+db = Database(host=HOST,
+              port=PORT,
+              user=USER,
+              password=PASSWORD,
+              database=DATABASE_LOCAL,)
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
-admins = [config('ADMIN_ID')]
+admins = [ADMIN_ID]
  
-# инициализируем бота и диспетчера для работы с ним
+
 bot = Bot(token=API, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())

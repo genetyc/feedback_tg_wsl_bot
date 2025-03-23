@@ -3,6 +3,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 class Survey(StatesGroup):
     init_state = State()
+    double_check_state = State()
     input_state = State()
     question1 = State()
     question2 = State()

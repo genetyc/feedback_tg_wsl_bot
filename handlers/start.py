@@ -5,18 +5,11 @@ from aiogram.fsm.context import FSMContext
 from states import Survey, MiniSurvey
 from handlers.json_handler import msgs
 from keyboards.kb_generator import kb_generation
+from bot_create import db
 
 
 start_router = Router()
 
-
-# @start_router.message(CommandStart())   # TODO сделать что-то с сохранением прогресса
-# async def command_start(message: Message, state: FSMContext) -> None:
-#     await message.answer(f"{msgs['start']}")
-#     await state.set_state(Survey.question1)
-#     await message.answer(f"{msgs['did_receive_parents_report']}", reply_markup=kb_generation(kb_list = [
-#         [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
-#     ]))
 
 @start_router.message(CommandStart())
 async def command_start(message: Message, state: FSMContext) -> None:
@@ -24,19 +17,63 @@ async def command_start(message: Message, state: FSMContext) -> None:
         [KeyboardButton(text='Оценить качество обучения'), KeyboardButton(text='Пройти опрос')]
     ]))
     await state.set_state(Survey.init_state)
+    await db.add_user(telegram_id=message.from_user.id, table='public.survey')
+    await db.add_user(telegram_id=message.from_user.id, table='public.mini_survey')
+
 
 
 @start_router.message(Survey.init_state)
 async def init_def(message: Message, state: FSMContext) -> None:
     text = message.text
+    tgid = message.from_user.id
     if text == 'Оценить качество обучения':
-        await state.set_state(MiniSurvey.question0)
-        await message.answer(f"{msgs['anon']}", reply_markup=kb_generation(kb_list = [
-            [KeyboardButton(text="Хочу пройти опрос анонимно"),
-             KeyboardButton(text="Хочу оставить свои контакты")]
-        ]))
+        data = await db.fetch("SELECT is_complete FROM public.mini_survey WHERE telegram_id = $1", tgid)
+        try: check = data[0]['is_complete']
+        except: check = False
+        if check == False:
+            await state.set_state(MiniSurvey.question0)
+            await message.answer(f"{msgs['anon']}", reply_markup=kb_generation(kb_list = [
+                [KeyboardButton(text="Хочу пройти опрос анонимно"),
+                KeyboardButton(text="Хочу оставить свои контакты")]
+            ]))
+        else:
+            await message.answer(f'Вы уже прошли опрос. Хотите пройти снова?', reply_markup=kb_generation(kb_list = [
+                [KeyboardButton(text="Пройти заново"), KeyboardButton(text="Нет")]
+            ]))
+            await state.set_state(Survey.double_check_state)
+            await state.update_data(pointer=0)
     elif text == 'Пройти опрос':
-        await state.set_state(Survey.question1)
-        await message.answer(f"{msgs['did_receive_parents_report']}", reply_markup=kb_generation(kb_list = [
-            [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
-        ]))
+        data = await db.fetch("SELECT is_complete FROM public.survey WHERE telegram_id = $1", tgid)
+        try: check = data[0]['is_complete']
+        except: check = False
+        if check == False:
+            await state.set_state(Survey.question1)
+            await message.answer(f"{msgs['did_get_parents_report']}", reply_markup=kb_generation(kb_list = [
+                [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
+            ]))
+        else:
+            await message.answer(f'Вы уже прошли опрос. Хотите пройти снова?', reply_markup=kb_generation(kb_list = [
+                [KeyboardButton(text="Пройти заново"), KeyboardButton(text="Нет")]
+            ]))
+            await state.set_state(Survey.double_check_state)
+            await state.update_data(pointer=1)
+
+
+@start_router.message(Survey.double_check_state)
+async def double_check_def(message: Message, state: FSMContext) -> None:
+    text = message.text
+    data = await state.get_data()
+    pointer = data['pointer']
+    if text == 'Пройти заново':
+        if pointer == 1:
+            await state.set_state(Survey.question1)
+            await message.answer(f"{msgs['did_get_parents_report']}", reply_markup=kb_generation(kb_list = [
+                [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
+            ]))
+        else:
+            await state.set_state(MiniSurvey.question0)
+            await message.answer(f"{msgs['anon']}", reply_markup=kb_generation(kb_list = [
+                [KeyboardButton(text="Хочу пройти опрос анонимно"),
+                KeyboardButton(text="Хочу оставить свои контакты")]
+            ]))
+        

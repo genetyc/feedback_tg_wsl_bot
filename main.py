@@ -4,14 +4,13 @@ import json
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from bot_create import bot, dp, BASE_URL, WEBHOOK_PATH, HOST, PORT, ADMIN_ID
-from handlers import survey, mini_survey, start
+from bot_create import bot, dp, ADMIN_ID, db
+
 #from dp_handler.dp_class import connect_to_db
 # Функция для проверки вебхука TODO - удалить после отладки
 # async def print_webhook_info():
 # #     webhook_info = await bot.get_webhook_info()
 #     print(webhook_info)
-#pool = None
 # Функция для установки командного меню для бота
 async def set_commands():
     # Создаем список команд, которые будут доступны пользователям
@@ -23,7 +22,6 @@ async def set_commands():
 # Функция, которая будет вызвана при запуске бота TODO удалить все связанное с вебхуками - на время отладки буду использовать поллинг
 async def on_startup() -> None:
     global file
-    #global pool
     # Устанавливаем командное меню
     await set_commands()
     # Устанавливаем вебхук для приема сообщений через заданный URL
@@ -31,22 +29,17 @@ async def on_startup() -> None:
     # Отправляем сообщение администратору о том, что бот был запущен
     await bot.send_message(chat_id=ADMIN_ID, text='Бот запущен!')
     print("Bot is running...")
+    await db.connect()        
 
-    #pool = await connect_to_db()
-    #print("Database access granted")
     # await print_webhook_info()
 
 
+from handlers import survey, mini_survey, start
 # Функция, которая будет вызвана при остановке бота
 async def on_shutdown() -> None:
-    #global pool
     # Отправляем сообщение администратору о том, что бот был остановлен
     await bot.send_message(chat_id=ADMIN_ID, text='Бот остановлен!')
-    latest_answers = []
-    # with open('testing_data_gather.txt') as file:   # TODO возможно стоит потом убрать или переделать
-    #     for line in file.readlines():
-    #         latest_answers.append(line)
-    # await bot.send_message(chat_id=ADMIN_ID, text = f'Ваши ответы:\n{('').join(latest_answers)}')
+    await db.close()
     
     # Удаляем вебхук и, при необходимости, очищаем ожидающие обновления
     # await bot.delete_webhook(drop_pending_updates=True)
@@ -70,27 +63,7 @@ async def main() -> None:
     # Регистрируем функцию, которая будет вызвана при остановке бота
     dp.shutdown.register(on_shutdown)
     logging.basicConfig(level=logging.DEBUG)
-
-    # Создаем веб-приложение на базе aiohttp
-    # app = web.Application()
-
-    # Настраиваем обработчик запросов для работы с вебхуком
-    # webhook_requests_handler = SimpleRequestHandler(
-    #     dispatcher=dp,  # Передаем диспетчер
-    #     bot=bot  # Передаем объект бота
-    # )
-    # Регистрируем обработчик запросов на определенном пути
-    # webhook_requests_handler.register(app, path=WEBHOOK_PATH)
-
-    # Настраиваем приложение и связываем его с диспетчером и ботом
-    # setup_application(app, dp, bot=bot)
-
-    # Запускаем веб-сервер на указанном хосте и порте
-    #web.run_app(app, host=HOST, port=PORT)
-
-    #asyncio.run(dp.start_polling(bot))
     await dp.start_polling(bot)
-
 
 # Точка входа в программу
 if __name__ == "__main__":
