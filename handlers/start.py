@@ -2,10 +2,10 @@ from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, KeyboardButton
 from aiogram.fsm.context import FSMContext
-from states import Survey, MiniSurvey
+from states import Survey, MiniSurvey, AdminPanel
 from handlers.json_handler import msgs
 from keyboards.kb_generator import kb_generation
-from bot_create import db
+from bot_create import db, admins
 
 
 start_router = Router()
@@ -13,13 +13,15 @@ start_router = Router()
 
 @start_router.message(CommandStart())
 async def command_start(message: Message, state: FSMContext) -> None:
-    await message.answer(f"{msgs['init']}", reply_markup=kb_generation(kb_list = [
+    kb_list = [
         [KeyboardButton(text='Оценить качество обучения'), KeyboardButton(text='Пройти опрос')]
-    ]))
+    ]
+    if message.from_user.id in admins:
+        kb_list.append([KeyboardButton(text='Админ-панель')])
+    await message.answer(f"{msgs['init']}", reply_markup=kb_generation(kb_list=kb_list))
     await state.set_state(Survey.init_state)
     await db.add_user(telegram_id=message.from_user.id, table='public.survey')
     await db.add_user(telegram_id=message.from_user.id, table='public.mini_survey')
-
 
 
 @start_router.message(Survey.init_state)
@@ -57,6 +59,12 @@ async def init_def(message: Message, state: FSMContext) -> None:
             ]))
             await state.set_state(Survey.double_check_state)
             await state.update_data(pointer=1)
+    elif text == 'Админ-панель' and tgid in admins:
+        print(admins)
+        await state.set_state(AdminPanel.admin_panel)
+        await message.answer(f'Админ-панель', reply_markup=kb_generation(kb_list = [
+            [KeyboardButton(text='Скачать данные')]
+        ]))
 
 
 @start_router.message(Survey.double_check_state)

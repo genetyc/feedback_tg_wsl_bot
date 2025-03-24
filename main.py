@@ -34,7 +34,7 @@ async def on_startup() -> None:
     # await print_webhook_info()
 
 
-from handlers import survey, mini_survey, start
+from handlers import admin_panel, survey, mini_survey, start
 # Функция, которая будет вызвана при остановке бота
 async def on_shutdown() -> None:
     # Отправляем сообщение администратору о том, что бот был остановлен
@@ -56,6 +56,7 @@ async def main() -> None:
     dp.include_router(start.start_router)
     dp.include_router(survey.survey_router)
     dp.include_router(mini_survey.mini_survey_router)
+    dp.include_router(admin_panel.admin_router)
 
     # Регистрируем функцию, которая будет вызвана при старте бота
     dp.startup.register(on_startup)

@@ -38,3 +38,7 @@ class MiniSurvey(StatesGroup):
     question4 = State()
     question5 = State()
     other_state = State()
+
+
+class AdminPanel(StatesGroup):
+    admin_panel = State()

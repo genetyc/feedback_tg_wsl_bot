@@ -23,9 +23,9 @@ db = Database(host=HOST,
               port=PORT,
               user=USER,
               password=PASSWORD,
-              database=DATABASE_LOCAL,)
+              database=DATABASE_LOCAL)
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
-admins = [ADMIN_ID]
+admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
  
 
 bot = Bot(token=API, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

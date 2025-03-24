@@ -7,9 +7,8 @@ from handlers.json_handler import msgs, answrs
 from keyboards.kb_generator import kb_generation, spec_kb_generation
 from bot_create import db
 
-#'✅'
+
 survey_router = Router()
-#choice_cb = CallbackData()
 temp = set()
 temp_list = []
 current_question: str = 'did_get_parents_report'
@@ -168,7 +167,7 @@ async def state7_5(message: Message, state: FSMContext):
         file.write(f'{current_question}->Ребёнок не участвовал\n')
         await db.update(tgid, f'{current_question}', 'Ребёнок не участвовал')
         await message.answer(msgs['teacher_parents'], reply_markup=ReplyKeyboardRemove())
-        await state.set_state(Survey.question10)
+        await state.set_state(Survey.question9)
         current_question = 'teacher_parents'
 
 

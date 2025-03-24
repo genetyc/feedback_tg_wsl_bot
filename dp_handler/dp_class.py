@@ -14,7 +14,7 @@ class Database:
 
     async def connect(self):
         try:
-            self.pool = await asyncpg.create_pool(dsn=config('DB_LOCAL')
+            self.pool = await asyncpg.create_pool(dsn=self.database
                 # host=self.host,
                 # port=self.port,
                 # user=self.user,
