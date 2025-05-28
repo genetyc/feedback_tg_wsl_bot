@@ -22,6 +22,7 @@ class Survey(StatesGroup):
     question13 = State()
     question14 = State()
     question15 = State()
+    ending_state = State()
     interstate = State()
     other_state = State()
     nother_state = State()
@@ -37,8 +38,12 @@ class MiniSurvey(StatesGroup):
     question3 = State()
     question4 = State()
     question5 = State()
+    contax_state = State()
+    low_grade_state = State()
     other_state = State()
 
 
 class AdminPanel(StatesGroup):
     admin_panel = State()
+    clear_check = State()
+    clear_double_check = State()

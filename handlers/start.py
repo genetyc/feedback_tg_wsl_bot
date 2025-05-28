@@ -29,9 +29,7 @@ async def init_def(message: Message, state: FSMContext) -> None:
     text = message.text
     tgid = message.from_user.id
     if text == 'Оценить качество обучения':
-        data = await db.fetch("SELECT is_complete FROM public.mini_survey WHERE telegram_id = $1", tgid)
-        try: check = data[0]['is_complete']
-        except: check = False
+        check = await db.fetchval("SELECT is_complete FROM public.mini_survey WHERE telegram_id = $1", tgid)
         if check == False:
             await state.set_state(MiniSurvey.question0)
             await message.answer(f"{msgs['anon']}", reply_markup=kb_generation(kb_list = [
@@ -45,9 +43,7 @@ async def init_def(message: Message, state: FSMContext) -> None:
             await state.set_state(Survey.double_check_state)
             await state.update_data(pointer=0)
     elif text == 'Пройти опрос':
-        data = await db.fetch("SELECT is_complete FROM public.survey WHERE telegram_id = $1", tgid)
-        try: check = data[0]['is_complete']
-        except: check = False
+        check = await db.fetchval("SELECT is_complete FROM public.survey WHERE telegram_id = $1", tgid)
         if check == False:
             await state.set_state(Survey.question1)
             await message.answer(f"{msgs['did_get_parents_report']}", reply_markup=kb_generation(kb_list = [
@@ -60,10 +56,12 @@ async def init_def(message: Message, state: FSMContext) -> None:
             await state.set_state(Survey.double_check_state)
             await state.update_data(pointer=1)
     elif text == 'Админ-панель' and tgid in admins:
-        print(admins)
         await state.set_state(AdminPanel.admin_panel)
         await message.answer(f'Админ-панель', reply_markup=kb_generation(kb_list = [
-            [KeyboardButton(text='Скачать данные')]
+            [KeyboardButton(text='Скачать данные')],
+            [KeyboardButton(text='Средний рейтинг')],
+            [KeyboardButton(text='Отчистить данные')],
+            [KeyboardButton(text='Назад')]
         ]))
 
 
@@ -73,15 +71,27 @@ async def double_check_def(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     pointer = data['pointer']
     if text == 'Пройти заново':
-        if pointer == 1:
+        if pointer == 1:    # указатель на таблицу в базе данных (1 - большой опрос, 0 - маленький опрос)
             await state.set_state(Survey.question1)
             await message.answer(f"{msgs['did_get_parents_report']}", reply_markup=kb_generation(kb_list = [
                 [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
             ]))
+            await db.del_user(telegram_id=message.from_user.id)
+            await db.add_user(telegram_id=message.from_user.id, table='public.survey')
         else:
             await state.set_state(MiniSurvey.question0)
             await message.answer(f"{msgs['anon']}", reply_markup=kb_generation(kb_list = [
                 [KeyboardButton(text="Хочу пройти опрос анонимно"),
                 KeyboardButton(text="Хочу оставить свои контакты")]
             ]))
+            await db.del_user(telegram_id=message.from_user.id, minisurvey=True)
+            await db.add_user(telegram_id=message.from_user.id, table='public.mini_survey')
+    elif text == 'Нет':
+        kb_list = [
+            [KeyboardButton(text='Оценить качество обучения'), KeyboardButton(text='Пройти опрос')]
+        ]
+        if message.from_user.id in admins:
+            kb_list.append([KeyboardButton(text='Админ-панель')])
+        await message.answer('Главная панель', reply_markup=kb_generation(kb_list=kb_list))
+        await state.set_state(Survey.init_state)
         

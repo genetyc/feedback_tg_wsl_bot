@@ -1,6 +1,13 @@
 asyncpg==0.30.0
 aiogram==3..17.0
-psycopg2-binary==2.9.10
 APScheduler=3.11.0
 python-decouple==3.8
 python-dotenv=1.0.1
+pandas==2.2.3
+numpy==2.2.4
+python-dateutil==2.9.0.post0
+pytz==2025.2
+six==1.17.0
+tzdata==2025.2
+openpyxl==3.1.5
+et-xmlfile==2.0.0

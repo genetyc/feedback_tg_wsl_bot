@@ -17,13 +17,14 @@ BASE_URL = config("URL")
 USER = config('USER')
 PASSWORD = config('PASSWORD')
 DATABASE_LOCAL = config('DB_LOCAL')
+DB_NAME = config('DB_NAME')
 
-
+# dsn = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 db = Database(host=HOST,
               port=PORT,
               user=USER,
               password=PASSWORD,
-              database=DATABASE_LOCAL)
+              database=DB_NAME)
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
  
