@@ -1,10 +1,10 @@
 import asyncpg
 from openpyxl import load_workbook
-from decouple import config
 from aiogram.types import FSInputFile
+import os
 
 class Database:
-    admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
+    admins = [int(admin_id) for admin_id in os.environ["ADMINS"].split(',')]
     def __init__(self, host, port, user, password, database):
         self.host = host
         self.port = port
@@ -14,15 +14,7 @@ class Database:
         self.pool = None
 
     async def connect(self):
-        try:
-            # self.pool = await asyncpg.create_pool(dsn=self.database # TODO это вообще чтоооо
-            #     # host=self.host,
-            #     # port=self.port,
-            #     # user=self.user,
-            #     # password=self.password,
-            #     # database=self.database,
-            # )
-            
+        try:            
             dsn = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
             self.pool = await asyncpg.create_pool(dsn=dsn)
             print("✅ Database connection established")
@@ -168,5 +160,4 @@ class Database:
         wb.save('poll.xlsx')
         file = FSInputFile('poll.xlsx')
         await bot.send_document(chat_id=chat_id, document=file, caption="📄 Данные опроса")
-        import os
         os.remove('poll.xlsx')
