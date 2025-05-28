@@ -6,7 +6,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from os import environ
 from dp_handler.dp_class import Database
 
-
 # переменные для работы
 ADMIN_ID = environ['ADMIN_ID']
 API = environ["API"]
