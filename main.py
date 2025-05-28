@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from aiogram.types import BotCommand, BotCommandScopeDefault
-from bot_create import bot, dp, ADMIN_ID, db
+from bot_create import bot, dp, ADMIN_ID, db, WEBHOOK_URL, API, REMOTE_PORT
 
 
 async def set_commands():
@@ -13,6 +13,8 @@ async def on_startup() -> None:
     # global file
     await set_commands()
     await bot.send_message(chat_id=ADMIN_ID, text='Бот запущен!')
+    WEBHOOK_PATH = f"{WEBHOOK_URL}/{API}"
+    await bot.set_webhook(WEBHOOK_PATH)
     # print("Bot is running...")
     await db.connect()        
 
@@ -32,7 +34,15 @@ async def main() -> None:
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     logging.basicConfig(level=logging.DEBUG)
-    await dp.start_polling(bot)
+    #await dp.start_polling(bot)
+    await dp.start_webhook(
+        webhook_path=f'/{API}',
+        skip_updates=True,
+        on_startup=on_startup,
+        on_shutdown=on_shutdown,
+        host="0.0.0.0",
+        port=int(REMOTE_PORT)
+    )
 
 
 if __name__ == "__main__":

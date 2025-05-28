@@ -15,6 +15,8 @@ USER = environ['USER']
 PASSWORD = environ['PASSWORD']
 DATABASE_LOCAL = environ['DB_LOCAL']
 DB_NAME = environ['DB_NAME']
+WEBHOOK_URL = environ['WEBHOOK_URL']
+REMOTE_PORT = environ['REMOTE_PORT']
 
 # dsn = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 db = Database(host=HOST,
