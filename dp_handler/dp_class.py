@@ -1,10 +1,10 @@
 import asyncpg
 from openpyxl import load_workbook
 from aiogram.types import FSInputFile
-import os
+from os import environ, remove
 
 class Database:
-    admins = [int(admin_id) for admin_id in os.environ["ADMINS"].split(',')]
+    admins = [int(admin_id) for admin_id in environ["ADMINS"].split(',')]
     def __init__(self, host, port, user, password, database):
         self.host = host
         self.port = port
@@ -160,4 +160,4 @@ class Database:
         wb.save('poll.xlsx')
         file = FSInputFile('poll.xlsx')
         await bot.send_document(chat_id=chat_id, document=file, caption="📄 Данные опроса")
-        os.remove('poll.xlsx')
+        remove('poll.xlsx')

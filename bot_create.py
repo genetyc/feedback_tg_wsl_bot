@@ -3,21 +3,19 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from decouple import config
+from os import environ
 from dp_handler.dp_class import Database
 
 
 # переменные для работы
-ADMIN_ID = config('ADMIN_ID')
-API = config("API")
-HOST = config("LHOST")
-PORT = int(config("PORT"))
-WEBHOOK_PATH = f'/{API}'
-BASE_URL = config("URL")
-USER = config('USER')
-PASSWORD = config('PASSWORD')
-DATABASE_LOCAL = config('DB_LOCAL')
-DB_NAME = config('DB_NAME')
+ADMIN_ID = environ['ADMIN_ID']
+API = environ["API"]
+HOST = environ["LHOST"]
+PORT = int(environ["PORT"])
+USER = environ['USER']
+PASSWORD = environ['PASSWORD']
+DATABASE_LOCAL = environ['DB_LOCAL']
+DB_NAME = environ['DB_NAME']
 
 # dsn = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 db = Database(host=HOST,
@@ -26,7 +24,7 @@ db = Database(host=HOST,
               password=PASSWORD,
               database=DB_NAME)
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
-admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
+admins = [int(admin_id) for admin_id in environ['ADMINS'].split(',')]
  
 
 bot = Bot(token=API, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
