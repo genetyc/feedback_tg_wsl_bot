@@ -84,6 +84,11 @@ class Database:
         share_query = 'SELECT COUNT(*) FROM public.mini_survey WHERE NOT would_u_share = $1 AND is_complete = True'
         return await self.fetchval(share_query, 'Нет')
     
+    async def get_columns(self, table_name: str):
+        async with self.pool.acquire() as conn:
+            stmt = await conn.prepare(f"SELECT * FROM {table_name} LIMIT 1")
+            return [attr.name for attr in stmt.get_attributes()]
+    
     async def clear_table(self, exceptions=admins, case=3): # case 1: clear Survey, case 2: clear MiniSurvey, case 3: clear both
         placeholders = ','.join(f"${i+1}" for i in range(len(exceptions)))
         query_survey = f"""
@@ -108,34 +113,33 @@ class Database:
         minis_query = "SELECT * FROM public.mini_survey"
         survey_rows = await self.fetch(survey_query)
         minis_rows = await self.fetch(minis_query)
-        wb = load_workbook("templ.xlsx")
+        wb = load_workbook("templ_v2.xlsx") # `templ.xlsx` is deprecated
         ws = wb['Большой опрос']
         mini_ws = wb['Качество обучения']
         
         async def survey_export(ws, rows):
+            desired_order = [
+                'telegram_id', 'is_complete', 'complete_date', 'is_disappointed', 'anon','gender', 'age', 'education',
+                'thanks_teacher', 'did_get_parents_report', 'report_was_good', 'report_good', 'report_bad',
+                'report_is_missing', 'where_you_found_out', 'what_is_quality_edu', 'whats_your_goal',
+                'education_quality', 'your_thoughts', 'how_effective', 'how_effective_2',
+                'best_of_all', 'teacher_student', 'professionalism', 'difficulties', 'whats_good',
+                'whats_bad', 'your_wishes'
+            ]
+            column_names = await self.get_columns("public.survey")
             for idx, row in enumerate(rows, start=3):
-                for index, x in enumerate(row, 65):
-                    if index == 65 or index == 66:
-                        cell = ws[f'{chr(index)}{idx}']
-                        cell.value = x
-                    elif 67 <= index <= 73:
-                        cell = ws[f'{chr(index+1)}{idx}']
-                        cell.value = x
-                    elif index == 74 or index == 77:
-                        temp=x.split(';')
-                        cor = 2 if index == 77 else 0
-                        for i in range(len(temp)):
-                            cell = ws[f'{chr(index+1+i+cor)}{idx}']
-                            cell.value = temp[i]
-                    elif index == 75 or index == 76:
-                        cell = ws[f'{chr(index+3)}{idx}']
-                        cell.value = x
-                    elif 77 < index < 84:
-                        cell = ws[f'{chr(index+6)}{idx}']
-                        cell.value = x
+                flat_row = []
+                for col in desired_order:
+                    if col in column_names:
+                        value = row[column_names.index(col)]
+                        if isinstance(value, str) and ";" in value:
+                            flat_row.extend(value.split(";"))
+                        else:
+                            flat_row.append(value)
                     else:
-                        cell = ws[f'C{idx}']
-                        cell.value = x
+                        flat_row.append(None)
+                for col_idx, value in enumerate(flat_row, start=1):
+                    ws.cell(row=idx, column=col_idx, value=value)
 
         async def minisurvey_export(ws, rows):
             for idx, row in enumerate(rows, start=2):

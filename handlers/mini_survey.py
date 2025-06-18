@@ -4,7 +4,8 @@ from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton
 from states import Survey, MiniSurvey
 from handlers.json_handler import msgs, answrs
 from keyboards.kb_generator import kb_generation, spec_kb_generation, rates_kb_generation
-from bot_create import db, admins
+from bot_create import db
+from filters.is_admin import is_admin
 
 
 mini_survey_router = Router()
@@ -152,7 +153,7 @@ async def state5(message: Message, state: FSMContext):
         kb_list = [
             [KeyboardButton(text='Оценить качество обучения'), KeyboardButton(text='Пройти опрос')]
         ]
-        if message.from_user.id in admins:
+        if is_admin(message.from_user.id):
             kb_list.append([KeyboardButton(text='Админ-панель')])
         await message.answer('Главная панель', reply_markup=kb_generation(kb_list=kb_list))
         await state.set_state(Survey.init_state)
