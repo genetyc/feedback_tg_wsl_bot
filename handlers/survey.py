@@ -373,7 +373,7 @@ async def ending_state(message: Message, state: FSMContext):
         await state.set_state(Survey.init_state)
 
 
-@survey_router.message(Survey.interstate)
+@survey_router.message(Survey.interstate) # TODO надо будет переделать, чтобы при несогласии сразу спрашивали, в чем беда
 async def interstate(message: Message, state: FSMContext):
     data = await state.get_data()
     counter = data['counter']

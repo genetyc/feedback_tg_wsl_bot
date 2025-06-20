@@ -54,7 +54,7 @@ async def main() -> None:
     await runner.setup()
     site = web.TCPSite(runner, host="0.0.0.0", port=int(REMOTE_PORT))
     await site.start()
-    await on_startup()
+
     while True:
         await asyncio.sleep(3600)
 
