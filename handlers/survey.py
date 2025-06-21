@@ -365,7 +365,7 @@ async def ending_state(message: Message, state: FSMContext):
     text = message.text
     if text == 'До свидания':
         kb_list = [
-            [KeyboardButton(text='Оценить качество обучения'), KeyboardButton(text='Пройти опрос')]
+            [KeyboardButton(text='Пройти опрос')] # еще кнопка 'Оценить качество обучения'
         ]
         if is_admin(message.from_user.id):
             kb_list.append([KeyboardButton(text='Админ-панель')])
