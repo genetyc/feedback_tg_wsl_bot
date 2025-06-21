@@ -220,7 +220,6 @@ async def state8(message: Message, state: FSMContext):
     text = message.text
     if text != 'Пропустить':
         await db.update(message.from_user.id, 'difficulties', text)
-        await db.update(message.from_user.id, 'is_disappointed', True)
     await message.answer(msgs['whats_good'], reply_markup=kb_generation(kb_list = [
         [KeyboardButton(text='Пропустить')]
     ]))
@@ -278,8 +277,6 @@ async def state10(message: Message, state: FSMContext):
     text = message.text
     if text != 'Пропустить':
         await db.update(message.from_user.id, 'whats_good', text)
-    else:
-        await db.update(message.from_user.id, 'is_disappointed', True)
     await message.answer(msgs['whats_bad'], reply_markup=kb_generation(kb_list = [
         [KeyboardButton(text='Пропустить')]
     ]))
@@ -291,7 +288,6 @@ async def state11(message: Message, state: FSMContext):
     text = message.text
     if text != 'Пропустить':
         await db.update(message.from_user.id, 'whats_bad', text)
-        await db.update(message.from_user.id, 'is_disappointed', True)
     await message.answer(msgs['your_wishes'], reply_markup=kb_generation(kb_list = [
         [KeyboardButton(text='Пропустить')]
     ]))
@@ -365,7 +361,7 @@ async def ending_state(message: Message, state: FSMContext):
     text = message.text
     if text == 'До свидания':
         kb_list = [
-            [KeyboardButton(text='Пройти опрос')] # еще кнопка 'Оценить качество обучения'
+            [KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
         ]
         if is_admin(message.from_user.id):
             kb_list.append([KeyboardButton(text='Админ-панель')])

@@ -15,7 +15,7 @@ start_router = Router()
 @start_router.message(CommandStart())
 async def command_start(message: Message, state: FSMContext) -> None:
     kb_list = [
-        [KeyboardButton(text='Пройти опрос')] # еще кнопка 'Оценить качество обучения'
+        [KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
     ] 
     if is_admin(message.from_user.id):
         kb_list.append([KeyboardButton(text='Админ-панель')])
@@ -89,7 +89,7 @@ async def double_check_def(message: Message, state: FSMContext) -> None:
             await db.add_user(telegram_id=message.from_user.id, table='public.mini_survey')
     elif text == 'Нет':
         kb_list = [
-            [KeyboardButton(text='Пройти опрос')] # еще кнопка 'Оценить качество обучения'
+            [KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
         ]
         if is_admin(message.from_user.id):
             kb_list.append([KeyboardButton(text='Админ-панель')])
