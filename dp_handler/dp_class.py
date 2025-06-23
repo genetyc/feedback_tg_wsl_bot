@@ -132,7 +132,7 @@ class Database:
                 for col in desired_order:
                     if col in column_names:
                         value = row[column_names.index(col)]
-                        if isinstance(value, str) and ";" in value:
+                        if isinstance(value, str) and "согласен;" in value:
                             flat_row.extend(value.split(";"))
                         else:
                             flat_row.append(value)
