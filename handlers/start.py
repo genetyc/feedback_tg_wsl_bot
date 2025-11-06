@@ -15,7 +15,8 @@ start_router = Router()
 @start_router.message(CommandStart())
 async def command_start(message: Message, state: FSMContext) -> None:
     kb_list = [
-        [KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
+        [KeyboardButton(text='Оценить качество обучения')]
+        # ,[KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
     ] 
     if is_admin(message.from_user.id):
         kb_list.append([KeyboardButton(text='Админ-панель')])
