@@ -16,7 +16,7 @@ async def on_startup() -> None:
     try:
         await set_commands()
         await bot.send_message(chat_id=ADMIN_ID, text='Бот запущен!')
-        # await bot.delete_webhook()
+        await bot.delete_webhook()
         #await bot.set_webhook(WEBHOOK_PATH)
         # logging.info("Setting webhook...")
         # await bot.set_webhook(
@@ -33,7 +33,7 @@ async def on_startup() -> None:
 
 async def on_shutdown() -> None:
     await bot.send_message(chat_id=ADMIN_ID, text='Бот остановлен!')
-    # await bot.delete_webhook()
+    await bot.delete_webhook()
     await db.close()
     await bot.session.close()
 
