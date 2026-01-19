@@ -109,13 +109,16 @@ class Database:
 
     from aiogram import Bot
     async def export_to_excel_and_send(self, bot: Bot, chat_id: int):
-        survey_query = "SELECT * FROM public.survey"
-        minis_query = "SELECT * FROM public.mini_survey"
-        survey_rows = await self.fetch(survey_query)
-        minis_rows = await self.fetch(minis_query)
-        wb = load_workbook("templ_v2.xlsx") # `templ.xlsx` is deprecated
-        ws = wb['Большой опрос']
-        mini_ws = wb['Качество обучения']
+        try:
+            survey_query = "SELECT * FROM public.survey"
+            minis_query = "SELECT * FROM public.mini_survey"
+            survey_rows = await self.fetch(survey_query)
+            minis_rows = await self.fetch(minis_query)
+            wb = load_workbook("templ_v2.xlsx") # `templ.xlsx` is deprecated
+            ws = wb['Большой опрос']
+            mini_ws = wb['Качество обучения']
+        except Exception as e:
+            print(f"Error while fetching data: {e}")
         
         async def survey_export(ws, rows):
             desired_order = [
@@ -141,27 +144,42 @@ class Database:
                 for col_idx, value in enumerate(flat_row, start=1):
                     ws.cell(row=idx, column=col_idx, value=value)
 
+        # import logging
+        # from datetime import datetime
+        # logger = logging.getLogger(__name__)
+
         async def minisurvey_export(ws, rows):
+            # logger.info("Начало записи данных в ячейки...")
             for idx, row in enumerate(rows, start=2):
-                for index, x in enumerate(row, 65):
-                    if index == 73 or index == 74:
+                # logger.debug(f"Обработка строки {idx}: {row}")
+                for index, x in enumerate(row, 65):  # 65 = 'A'
+                    if index == 73 or index == 74:  # 'I' или 'J'
                         cell = ws[f'{chr(index+1)}{idx}']
                         cell.value = x
-                    elif index == 75:
+                    elif index == 75:  # 'K'
                         cell = ws[f'{chr(index-2)}{idx}']
                         cell.value = x
                     else:
                         cell = ws[f'{chr(index)}{idx}']
                         cell.value = x
-                    avg_rating, users_total = await self.get_average_edu_rating()
+            # logger.info("Запрос среднего рейтинга...")
+            avg_rating, users_total = await self.get_average_edu_rating()
+            # logger.info("Запрос диапазонов рейтинга...")
             neg_rating, neutral_rating, pos_rating = await self.get_rating_range()
-            for index, value in enumerate([users_total, avg_rating, neg_rating, neutral_rating, pos_rating], start=1):
+            # logger.info("Запись итоговых значений...")
+            ratings_data = [users_total, avg_rating, neg_rating, neutral_rating, pos_rating]
+            rating_labels = ["Всего пользователей", "Средний рейтинг", "Негативных", "Нейтральных", "Позитивных"]
+            
+            for index, (_, value) in enumerate(zip(rating_labels, ratings_data), start=1):
                 cell = ws[f'P{index}']
                 cell.value = value
-
+                
+        print("Exporting survey data...")
         await survey_export(ws, survey_rows)
+        print("Exporting mini survey data...")
         await minisurvey_export(mini_ws, minis_rows)
         wb.save('poll.xlsx')
         file = FSInputFile('poll.xlsx')
+        print("Sending file...")
         await bot.send_document(chat_id=chat_id, document=file, caption="📄 Данные опроса")
         remove('poll.xlsx')
