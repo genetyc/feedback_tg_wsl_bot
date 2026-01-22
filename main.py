@@ -17,13 +17,13 @@ async def on_startup() -> None:
         await set_commands()
         await bot.send_message(chat_id=ADMIN_ID, text='Бот запущен!')
         await bot.delete_webhook()
-        #await bot.set_webhook(WEBHOOK_PATH)
-        # logging.info("Setting webhook...")
-        # await bot.set_webhook(
-        #     url=f"{WEBHOOK_URL}/{API}",
-        #     drop_pending_updates=True
-        # )
-        # print("Bot is running...")
+        logging.info("Setting webhook...")
+        await bot.set_webhook(
+            url=f"{WEBHOOK_URL}/{API}",
+            allowed_updates=dp.resolve_used_update_types(),
+            drop_pending_updates=True
+        )
+        print("Bot is running...")
         logging.info("Connecting to the database...")
         await db.connect()
         logging.info("Starting...")
@@ -50,26 +50,25 @@ async def main() -> None:
     logging.info("Startup and shutdown handlers registration...")
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
-    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
-    # await dp.start_polling(bot)
-    # logging.info("Starting webhook server...")
-    # app = web.Application()
-    # webhook_requests_handler = SimpleRequestHandler(
-    #     dispatcher=dp,
-    #     bot=bot)
-    # webhook_requests_handler.register(app, path=f"/{API}")
-    # setup_application(app, dp, bot=bot)
+    # await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+    logging.info("Starting webhook server...")
+    app = web.Application()
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot)
+    webhook_requests_handler.register(app, path=f"/{API}")
+    setup_application(app, dp, bot=bot)
 
-    # logging.info("Starting webhook site...")
-    # runner = web.AppRunner(app)
-    # await runner.setup()
+    logging.info("Starting webhook site...")
+    runner = web.AppRunner(app)
+    await runner.setup()
     
-    # logging.info(f"Listening on remote port {REMOTE_PORT}...")
-    # site = web.TCPSite(runner, host="0.0.0.0", port=int(REMOTE_PORT))
-    # await site.start()
+    logging.info(f"Listening on remote port {REMOTE_PORT}...")
+    site = web.TCPSite(runner, host="0.0.0.0", port=int(REMOTE_PORT))
+    await site.start()
 
-    # while True:
-    #     await asyncio.sleep(3600)
+    while True:
+        await asyncio.sleep(3600)
 
 
 if __name__ == "__main__":
