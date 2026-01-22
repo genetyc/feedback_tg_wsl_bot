@@ -2,12 +2,14 @@ from aiogram.fsm.state import State, StatesGroup
 
 
 class Survey(StatesGroup):
+    begin_state = State()
     init_state = State()
     double_check_state = State()
     input_state = State()
     question0_1 = State()
     question0_2 = State()
     question0_3 = State()
+    teacher_name = State()
     question1 = State()
     question1_1 = State()
     question1_2_1 = State()

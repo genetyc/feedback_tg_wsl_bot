@@ -7,11 +7,16 @@ def kb_generation(kb_list) -> ReplyKeyboardBuilder:
     return keyboard
 
 
-def spec_kb_generation(kb_list: str, next_button: bool = False, quick_replace: bool = False) -> ReplyKeyboardBuilder:
+def spec_kb_generation(kb_list: str, next_button: bool = False, quick_replace: bool = False, filter: set = None) -> ReplyKeyboardBuilder:
     builder = ReplyKeyboardBuilder()
     if next_button: builder.add(KeyboardButton(text='Дальше'))
     for item in kb_list.split('='):
-        builder.button(text='Дальше' if quick_replace and item=='Ребёнок не участвовал' else item)
+        if filter is not None and item in filter:
+            display_text = f"✅ {item}"
+        else:
+            display_text = item
+        button_text = 'Дальше' if quick_replace and item=='Ребёнок не участвовал' else display_text
+        builder.button(text=button_text)
     builder.adjust(1)
     return builder.as_markup(resize_keyboard=True)
 

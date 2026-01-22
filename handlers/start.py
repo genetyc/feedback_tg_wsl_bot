@@ -2,11 +2,13 @@ from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, KeyboardButton
 from aiogram.fsm.context import FSMContext
+from aiogram.utils.formatting import Bold, Underline
 from states import Survey, MiniSurvey, AdminPanel
 from handlers.json_handler import msgs
-from keyboards.kb_generator import kb_generation
+from keyboards.kb_generator import kb_generation, spec_kb_generation
 from bot_create import db
-from filters.is_admin import is_admin 
+from filters.is_admin import is_admin
+from handlers.json_handler import msgs, answrs
 
 
 start_router = Router()
@@ -14,9 +16,18 @@ start_router = Router()
 
 @start_router.message(CommandStart())
 async def command_start(message: Message, state: FSMContext) -> None:
+    text = f"{msgs['begin']}\n\n<u>{msgs['warning'][:5]}</u>{msgs['warning'][5:]}"
+    await message.answer(text, 
+                        parse_mode="HTML",
+                        reply_markup=spec_kb_generation(answrs['begin']))
+    await state.set_state(Survey.begin_state)
+
+
+@start_router.message(Survey.begin_state)
+async def begin_def(message: Message, state: FSMContext) -> None:
     kb_list = [
         [KeyboardButton(text='Оценить качество обучения')]
-        # ,[KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
+        ,[KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
     ] 
     if is_admin(message.from_user.id):
         kb_list.append([KeyboardButton(text='Админ-панель')])
@@ -90,7 +101,8 @@ async def double_check_def(message: Message, state: FSMContext) -> None:
             await db.add_user(telegram_id=message.from_user.id, table='public.mini_survey')
     elif text == 'Нет':
         kb_list = [
-            [KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
+            [KeyboardButton(text='Пройти опрос')], # TODO еще кнопка 'Оценить качество обучения'
+            [KeyboardButton(text='Оценить качество обучения')]
         ]
         if is_admin(message.from_user.id):
             kb_list.append([KeyboardButton(text='Админ-панель')])

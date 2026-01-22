@@ -20,9 +20,10 @@ async def state0_1(message: Message, state: FSMContext):
         await state.update_data(not_anon = True)
     elif text == 'Нет':
         await message.answer(f'{msgs['thanks_teacher']}', reply_markup=kb_generation(kb_list = [
-            [KeyboardButton(text='Пропустить')]
+            [KeyboardButton(text='Да')],
+            [KeyboardButton(text='Нет')]
         ]))
-        await state.set_state(Survey.question0_3)
+        await state.set_state(Survey.teacher_name)
     else:
         await message.answer("Некорректный ответ. Используйте кнопки для ответов.", reply_markup=spec_kb_generation(answrs['yn']))
         await state.set_state(Survey.question0_1)
@@ -37,15 +38,27 @@ async def state0_2(message: Message, state: FSMContext):
     except:
         pass
     await message.answer(f'{msgs['thanks_teacher']}', reply_markup=kb_generation(kb_list = [
-        [KeyboardButton(text='Пропустить')]
+        [KeyboardButton(text='Да')],
+        [KeyboardButton(text='Нет')]
     ]))
-    await state.set_state(Survey.question0_3)
+    await state.set_state(Survey.teacher_name)
     
+
+@survey_router.message(Survey.teacher_name)
+async def state_teacher_name(message: Message, state: FSMContext):
+    text = message.text
+    if text == 'Да':
+        await message.answer("Пожалуйста, введите имя вашего учителя:")
+        await state.set_state(Survey.question0_3)
+    elif text == 'Нет':
+        await message.answer(f'{msgs['did_get_parents_report']}', reply_markup=spec_kb_generation(answrs['yn']))
+        await state.set_state(Survey.question1)
+        await db.update(message.from_user.id, 'thanks_teacher', '-')
+
 @survey_router.message(Survey.question0_3)
 async def state0_3(message: Message, state: FSMContext):
     text = message.text
-    if text != 'Пропустить':
-        await db.update(message.from_user.id, 'thanks_teacher', text)
+    await db.update(message.from_user.id, 'thanks_teacher', text)
     await message.answer(f'{msgs['did_get_parents_report']}', reply_markup=spec_kb_generation(answrs['yn']))
     await state.set_state(Survey.question1)
 
@@ -84,36 +97,23 @@ async def state1_1(message: Message, state: FSMContext):
 async def state1_2_1(message: Message, state: FSMContext):
     text = message.text
     await db.update(message.from_user.id, 'report_good', text)
-    await message.answer(f"{msgs['where_you_found_out']}", reply_markup=spec_kb_generation(answrs['where_you_found_out']))
-    await state.set_state(Survey.question2)
+    await message.answer(f"{msgs['what_is_quality_edu']}", reply_markup=spec_kb_generation(answrs['what_is_quality_edu'], next_button=False))
+    await state.set_state(Survey.question3)
 
     
 @survey_router.message(Survey.question1_2_2)
 async def state1_2_2(message: Message, state: FSMContext):
     text = message.text
     await db.update(message.from_user.id, 'report_bad', text)
-    await message.answer(f"{msgs['where_you_found_out']}", reply_markup=spec_kb_generation(answrs['where_you_found_out']))
-    await state.set_state(Survey.question2)
+    await message.answer(f"{msgs['what_is_quality_edu']}", reply_markup=spec_kb_generation(answrs['what_is_quality_edu'], next_button=False))
+    await state.set_state(Survey.question3)
 
 @survey_router.message(Survey.question1_3)
 async def state1_3(message: Message, state: FSMContext):
     text = message.text
     await db.update(message.from_user.id, 'report_is_missing', text)
-    await message.answer(f"{msgs['where_you_found_out']}", reply_markup=spec_kb_generation(answrs['where_you_found_out']))
-    await state.set_state(Survey.question2)
-
-@survey_router.message(Survey.question2)
-async def state2(message: Message, state: FSMContext):
-    text = message.text
-    if text == "Другое":
-        await message.answer("Предложите свой вариант:")
-        await state.set_state(Survey.other_state)
-        await state.update_data(active_state=Survey.question3, questions='what_is_quality_edu', answers='what_is_quality_edu', next_button=False, current_question='where_you_found_out')
-    else:
-        if text in answrs['where_you_found_out']:
-            await db.update(message.from_user.id, 'where_you_found_out', text)
-        await message.answer(f"{msgs['what_is_quality_edu']}", reply_markup=spec_kb_generation(answrs['what_is_quality_edu'], next_button=False))
-        await state.set_state(Survey.question3)
+    await message.answer(f"{msgs['what_is_quality_edu']}", reply_markup=spec_kb_generation(answrs['what_is_quality_edu'], next_button=False))
+    await state.set_state(Survey.question3)
 
 
 @survey_router.message(Survey.question3)
@@ -122,41 +122,44 @@ async def state3(message: Message, state: FSMContext):
     if text == "Другое":
         await message.answer("Предложите свой вариант:")
         await state.set_state(Survey.other_state)
-        await state.update_data(active_state=Survey.question3_5, questions='whats_your_goal', answers='whats_your_goal', next_button=False, current_question='what_is_quality_edu')
+        await state.update_data(active_state=Survey.question3_5, questions='whats_your_goal', answers='whats_your_goal', next_button=False, current_question='what_is_quality_edu', temp_set = set())
     else:
         if text in answrs['what_is_quality_edu']:
             await db.update(message.from_user.id, 'what_is_quality_edu', text)
         await message.answer(f"{msgs['whats_your_goal']}", reply_markup=spec_kb_generation(answrs['whats_your_goal'], next_button=False))
         await state.set_state(Survey.question3_5)
+        await state.update_data(temp_set = set())
     
 
 @survey_router.message(Survey.question3_5)
 async def state3_5(message: Message, state: FSMContext):
     text = message.text
-    temp_set = set()
+    data = await state.get_data()
+    temp_set = data.get('temp_set', set())
     if text == "Другое":
         await message.answer("Предложите свой вариант:")
         await state.set_state(Survey.other_state)
-        await state.update_data(active_state=Survey.question4, questions='nother', answers='whats_your_goal', next_button=False, tmp=True, temp_set = temp_set)
+        await state.update_data(active_state=Survey.question4, questions='nother', answers='whats_your_goal', next_button=True, temp_set = temp_set, current_question = None, filter=temp_set)
     else:
         if text in answrs['whats_your_goal']:
             temp_set.add(text)
-        await message.answer(msgs['nother'], reply_markup=spec_kb_generation(answrs['whats_your_goal'], next_button=True))
+        await message.answer(msgs["nother"], reply_markup=spec_kb_generation(answrs['whats_your_goal'], next_button=True, filter=temp_set), parse_mode="HTML")
         await state.set_state(Survey.question4)
-        await state.update_data(temp_set=temp_set)
+        await state.update_data(temp_set=temp_set, filter=temp_set)
     
 
 @survey_router.message(Survey.question4)
 async def state4(message: Message, state: FSMContext):
     text = message.text
     data = await state.get_data()
-    temp_set = data['temp_set']
+    temp_set = data.get('temp_set', set())
     if text in answrs['whats_your_goal'] and text != 'Другое':
         temp_set.add(text)
+        await message.answer(msgs['nother'], reply_markup=spec_kb_generation(answrs['whats_your_goal'], next_button=True, filter=temp_set), parse_mode="HTML")
     if message.text == "Другое":
         await message.answer("Предложите свой вариант:")
         await state.set_state(Survey.other_state)
-        await state.update_data(active_state=Survey.question4, questions='nother', answers='whats_your_goal', next_button=True, tmp=True, temp_set=temp_set)
+        await state.update_data(active_state=Survey.question4, questions='nother', answers='whats_your_goal', next_button=True, temp_set=temp_set, current_question = None, filter=temp_set)
     if message.text == 'Дальше':
         questions = str(msgs['education_quality']).split('=')
         await message.answer(questions[0], reply_markup=spec_kb_generation(answrs['education_quality']))
@@ -361,7 +364,8 @@ async def ending_state(message: Message, state: FSMContext):
     text = message.text
     if text == 'До свидания':
         kb_list = [
-            [KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
+            [KeyboardButton(text='Пройти опрос')], # TODO еще кнопка 'Оценить качество обучения'
+            [KeyboardButton(text='Оценить качество обучения')]
         ]
         if is_admin(message.from_user.id):
             kb_list.append([KeyboardButton(text='Админ-панель')])
@@ -410,18 +414,26 @@ async def other_state(message: Message, state: FSMContext):
     answers = data['answers']
     next_button = data['next_button']
     try:
-        tmp = data['tmp'] 
         temp_set = data['temp_set']
+        filter_flag = data.get('filter', False)
     except:
-        tmp = False
+        temp_set = set()
+        filter_flag = False
+    try:
         current_question = data['current_question']
+    except:
+        current_question = None
     text = message.text
-    if not tmp:
+    if current_question is not None:
         await db.update(message.from_user.id, current_question, text)
+        await message.answer(f"{msgs[questions]}",reply_markup=spec_kb_generation(answrs[answers], next_button=next_button))
     else:
         if text != 'Другое':
             temp_set.add(text)
-    await message.answer(f"{msgs[questions]}",reply_markup=spec_kb_generation(answrs[answers], next_button=next_button))
+        if filter_flag:
+            await message.answer(f"{msgs[questions]}",reply_markup=spec_kb_generation(answrs[answers], next_button=next_button, filter=temp_set))
+        else:
+            await message.answer(f"{msgs[questions]}",reply_markup=spec_kb_generation(answrs[answers], next_button=next_button))
     await state.set_state(active_state)
-    if tmp:
+    if temp_set is not None:
         await state.update_data(temp_set=temp_set)
