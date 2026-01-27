@@ -89,7 +89,7 @@ async def state1_1(message: Message, state: FSMContext):
         await db.update(message.from_user.id, 'report_was_good', text)
         await message.answer(f'{msgs['report_bad']}', reply_markup=ReplyKeyboardRemove())
         await state.set_state(Survey.question1_2_2)
-        await db.update(message.from_user.id, 'is_disappointed', True)
+        # await db.update(message.from_user.id, 'is_disappointed', True)
     else:
         await message.answer("Некорректный ответ. Используйте кнопки для ответов.", reply_markup=spec_kb_generation(answrs['report_was_good']))
         await state.set_state(Survey.question1_1)
