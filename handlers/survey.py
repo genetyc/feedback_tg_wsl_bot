@@ -13,6 +13,7 @@ survey_router = Router()
 
 @survey_router.message(Survey.question0_1) # анонимность
 async def state0_1(message: Message, state: FSMContext):
+    await db.update(message.from_user.id, 'is_disappointed', False)
     text = message.text
     if text == 'Да':
         await message.answer("Пожалуйста, введите свои контактные данные:")
@@ -88,6 +89,7 @@ async def state1_1(message: Message, state: FSMContext):
         await db.update(message.from_user.id, 'report_was_good', text)
         await message.answer(f'{msgs['report_bad']}', reply_markup=ReplyKeyboardRemove())
         await state.set_state(Survey.question1_2_2)
+        await db.update(message.from_user.id, 'is_disappointed', True)
     else:
         await message.answer("Некорректный ответ. Используйте кнопки для ответов.", reply_markup=spec_kb_generation(answrs['report_was_good']))
         await state.set_state(Survey.question1_1)
@@ -364,8 +366,8 @@ async def ending_state(message: Message, state: FSMContext):
     text = message.text
     if text == 'До свидания':
         kb_list = [
-            [KeyboardButton(text='Пройти опрос')], # TODO еще кнопка 'Оценить качество обучения'
-            [KeyboardButton(text='Оценить качество обучения')]
+            [KeyboardButton(text='Пройти опрос')] # TODO еще кнопка 'Оценить качество обучения'
+            # ,[KeyboardButton(text='Оценить качество обучения')]
         ]
         if is_admin(message.from_user.id):
             kb_list.append([KeyboardButton(text='Админ-панель')])
